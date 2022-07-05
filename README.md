@@ -1,2 +1,2 @@
 # SimpleCompiler
-A Simple Compiler from SemWare Corporation for a Teeny Pascal Programming Language
+SemWare Corporation Tutorial: A Simple Compiler for a Teeny Pascal Programming Language

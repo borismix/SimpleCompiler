@@ -8,4 +8,5 @@ Tutorial at GitHub <a href="https://borismix.github.io/SimpleCompiler/Compiler.h
 
 <hr>
 Copyright © 2022 SemWare Corporation. All rights reserved worldwide.
+SemWare is a registered trademark of Sammy and Bobbi Mitchell.
 

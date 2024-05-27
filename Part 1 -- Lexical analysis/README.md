@@ -9,4 +9,4 @@
 | plus              | +                    |
 | times             | *                    |
 
-[Tutorial Part 1: Lexical analysis.]([https://link-url-here.org](https://borismix.github.io/SimpleCompiler/01-Lexer.html))
+[Tutorial Part 1: Lexical analysis.](https://borismix.github.io/SimpleCompiler/01-Lexer.html)

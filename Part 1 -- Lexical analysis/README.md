@@ -9,3 +9,4 @@
 | plus              | +                    |
 | times             | *                    |
 
+[Tutorial Part 1: Lexical analysis.](https://borismix.github.io/SimpleCompiler/01-Lexer.html)

@@ -21,14 +21,14 @@ class Scanner
 {
 public:
   bool init( const char fn[] );
-  Symbol getsym();
-  int getval() { return val; }
-  const char *getid() { return id; }
+  Symbol getsym( void );
+  int getval( void ) { return val; }
+  const char *getid( void ) { return id; }
 
 private:
-  void read_ch();
-  Symbol get_ident();
-  Symbol get_number();
+  void read_ch( void );
+  Symbol get_ident( void );
+  Symbol get_number( void );
   void enter_kw( Symbol sym, const char* name );
   enum { KW = 25 };
   int val;

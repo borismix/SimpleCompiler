@@ -15,7 +15,7 @@
 
 #include "teeny.h"
 
-void Scanner::read_ch()
+void Scanner::read_ch( void )
 {
   ch = fgetc( file );
 
@@ -23,7 +23,7 @@ void Scanner::read_ch()
     putchar( ( char )ch );
 }
 
-Symbol Scanner::get_ident()
+Symbol Scanner::get_ident( void )
 {
   int i = 0;
 
@@ -47,7 +47,7 @@ Symbol Scanner::get_ident()
   return( keySym[ i ] );
 }
 
-Symbol Scanner::get_number()
+Symbol Scanner::get_number( void )
 {
   val = 0;
 
@@ -61,7 +61,7 @@ Symbol Scanner::get_number()
   return( number );
 }
 
-Symbol Scanner::getsym()
+Symbol Scanner::getsym( void )
 {
   while( ch != EOF && ch <= ' ' )
     read_ch();

@@ -1,0 +1,4 @@
+Grammar for teeny Pascal:
+   Pascal  = 'program' id ';' 'begin' Stmtseq 'end' '.' .
+   Stmtseq = Stmt {';' Stmt } .
+   Stmt    = ['writeln' '(' String ')'] .

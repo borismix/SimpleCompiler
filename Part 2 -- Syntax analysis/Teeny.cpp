@@ -10,23 +10,105 @@
 
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
 #include "teeny.h"
 
-void Scanner::read_ch( void )
-{
-  ch = fgetc( file );
+VirtualMachine vm;
+Msg error;
 
-  if( ch != EOF )
-    putchar( ( char )ch );
+void Msg::fatal( const char msg[] )
+{
+  if( err_line == 0 )
+    printf( msg );
+  else
+    printf( "line %d col %d %s\n", err_line, err_col, msg );
+  exit( 2 );
 }
 
-Symbol Scanner::get_ident( void )
+void Msg::warn( const char msg[] )
+{
+  printf( "line %d col %d %s\n", err_line, err_col, msg );
+  exit( 2 );
+}
+
+/* ---------------- Virtual Machine interpreter ---------------- */
+void interpret()
+{
+  const Instruction *pc = vm.getcode();
+  for( ;;)
+  {
+    switch( pc->opcode )
+    {
+      case wrc: printf( "%c", pc->operand ); break;
+      case wrl: printf( "\n" ); break;
+      case hlt: return;
+      default: error.fatal( "whoops! unknown opcode" );
+    }
+    pc++;
+  }
+}
+
+/* ---------------- Code generator ----------------------------*/
+void VirtualMachine::gen( Opcode opcode, int operand = 0 )
+{
+  if( code_index < MAX_CODE )
+  {
+    code[ code_index ].opcode = opcode;
+    code[ code_index ].operand = operand;
+    code_index++;
+  }
+  else error.fatal( "program too long" );
+}
+
+/*---------------- Lexical analyzer --------------------------*/
+const char* Scanner::key_words[] = { "begin", "end", "program", "writeln", "" };
+Scanner::Symbol Scanner::key_syms[] = { begin, end, program, writeln, idsym };
+
+void Scanner::read_ch()
+{
+  if( ch == '\n' )
+  {
+    cur_line++;
+    cur_col = 0;
+  }
+  ch = fgetc( f );
+  if( ch != EOF )
+    cur_col++;
+}
+
+Scanner::Symbol Scanner::get_string( int delimiter )
 {
   int i = 0;
+  for( ;;)
+  {
+    read_ch();
+    if( ch == delimiter )
+    {
+      read_ch();
+      break;
+    }
+    if( ch == EOF )
+    {
+      error.warn( "eof in string" );
+      break;
+    }
+    if( ch < ' ' ) error.warn( "illegal character in string" );
+    if( i < Max_str )
+    {
+      lit_str[ i ] = ( char )ch;
+      i++;
+    }
+  }
+  lit_str[ i ] = '\0';
+  return litstrsym;
+}
 
+Scanner::Symbol Scanner::get_ident()
+{
+  int i = 0;
   do
   {
     if( i < Ident_max )
@@ -34,117 +116,129 @@ Symbol Scanner::get_ident( void )
       id[ i ] = ( char )ch;
       i++;
     }
-
     read_ch();
   }
   while( ch != EOF && isalnum( ch ) );
-
   id[ i ] = '\0';
-
-  for( i = 0; i < nkw && strcmp( id, keyTab[ i ] ) != 0; i++ )
+  for( i = 0;
+    key_words[ i ][ 0 ] != '\0' && strcmp( id, key_words[ i ] ) != 0;
+    i++ )
     ;
-
-  return( keySym[ i ] );
+  return key_syms[ i ];
 }
 
-Symbol Scanner::get_number( void )
+Scanner::Symbol Scanner::get_number()
 {
   val = 0;
-
   do
   {
     val = 10 * val + ( ch - '0' );
     read_ch();
   }
   while( ch != EOF && isdigit( ch ) );
-
-  return( number );
+  return numbersym;
 }
 
-Symbol Scanner::getsym( void )
+Scanner::Symbol Scanner::getsym()
 {
+  int save_ch;
   while( ch != EOF && ch <= ' ' )
     read_ch();
-
+  error.set_line( cur_line ); error.set_col( cur_col );
+  save_ch = ch;
   switch( ch )
   {
-    case EOF:
-      return( eofsym );
-
-    case '+':
-      read_ch();
-      return( plus );
-
-    case '*':
-      read_ch();
-      return( times );
-
-    case '(':
-      read_ch();
-      return( lparen );
-
-    case ')':
-      read_ch();
-      return( rparen );
-
+    case EOF: return eofsym;
+    case '+':case '*':case '(':case ')':case '.':case ';':
+      read_ch(); return ( Symbol )save_ch;
+    case '\'': return get_string( ch );
     default:
-    {
-      if( isalpha( ch ) )
-        return( get_ident() );
-
-      if( isdigit( ch ) )
-        return( get_number() );
-
+      if( isalpha( ch ) ) return get_ident();
+      if( isdigit( ch ) ) return get_number();
+      error.warn( "illegal character" );
       read_ch();
-
-      return( null );
-    }
+      return getsym();
   }
 }
 
-void Scanner::enter_kw( Symbol sym, const char *name )
+bool Scanner::init_scanner( const char fn[] )
 {
-  keyTab[ nkw ] = name;
-  keySym[ nkw ] = sym;
-  nkw++;
-}
-
-bool Scanner::init( const char fn[] )
-{
-  if( ( file = fopen( fn, "r" ) ) == NULL )
-    return( false );
-
+  if( ( f = fopen( fn, "r" ) ) == NULL ) return false;
+  error.set_line( 1 );
+  error.set_col( 0 );
+  cur_line = 1;
+  cur_col = 0;
   ch = ' ';
   read_ch();
-  nkw = 0;
-  enter_kw( writesym, "write" );
-  enter_kw( null, "" );
-
-  return( true );
+  return true;
 }
+
+/*---------------- Parser ------------------------------------*/
+
+bool Parser::accept( Symbol s )
+{
+  if( s == sym )
+  {
+    sym = getsym();
+    return true;
+  }
+  return false;
+}
+
+void Parser::expect( Symbol s )
+{
+  if( !accept( s ) ) error.warn( "syntax error" );
+}
+
+// Stmt = ['writeln' '(' String ')'] .
+bool Parser::stmt()
+{
+  if( accept( writeln ) )
+  {
+    expect( lparen );
+    if( sym != litstrsym ) error.warn( "string expected" );
+    const char *lit_str = getlitstr();
+    for( int i = 0; lit_str[ i ] != '\0'; i++ )
+      vm.gen( wrc, lit_str[ i ] );
+    vm.gen( wrl );
+    sym = getsym();
+    expect( rparen );
+    return true;
+  }
+  return false;
+}
+
+// Stmtseq = Stmt {';' Stmt } .
+void Parser::stmtseq()
+{
+  do
+  {
+    stmt();
+  }
+  while( accept( semi ) );
+}
+
+// Pascal = 'program' id ';' 'begin' Stmtseq 'end' '.' .
+void Parser::parse( char fn[] )
+{
+  if( !init_scanner( fn ) ) error.fatal( "no source" );
+  sym = getsym();
+  expect( program );
+  expect( idsym );
+  expect( semi );
+  expect( begin );
+  stmtseq();
+  expect( end );
+  vm.gen( hlt );
+  expect( period );
+}
+
+/*---------------- Main driver --------------------------------*/
 
 int main( int argc, char *argv[] )
 {
-  Scanner s;
-  Symbol sym;
-
-  if( argc < 2 )
-  {
-    printf( "Need a filename\n" );
-    return( 2 );
-  }
-
-  if( !s.init( argv[ 1 ] ) )
-  {
-    printf( "Can't open %s\n", argv[ 1 ] );
-    return( 2 );
-  }
-
-  do
-  {
-    sym = s.getsym();
-  }
-  while( sym != eofsym );
-
-  return( 0 );
+  Parser parser;
+  parser.parse( argv[ 1 ] );
+  interpret();
+  return 0;
 }

@@ -1,8 +1,9 @@
-# Lexical Rules
+# Grammar for teeny Pascal
 
-identifiers:        [a-zA-Z][a-zA-Z0-9]*
-integer constants:  [0-9]+
-left parenthesis    (
-right parenthesis   )
-plus                +
-times               *
+| NonTerm           | Rule                                           |
+| :---------------- | :--------------------------------------------: |
+| Pascal            | = 'program' id ';' 'begin' Stmtseq 'end' '.' . |
+| Stmtseq           | = Stmt {';' Stmt } .                           |
+| Stmt              | = ['writeln' '(' String ')'] .                 |
+
+[Tutorial Part 1: Lexical analysis.](https://borismix.github.io/SimpleCompiler/02-Parser.html)

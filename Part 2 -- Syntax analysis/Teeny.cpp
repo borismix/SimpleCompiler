@@ -5,8 +5,7 @@
 /*                                                                            */
 /******************************************************************************/
 
-// A simple scanner for a language with identifiers, integers,
-// parenthesis, and plus and minus symbols.
+// A simple parser for a language with identifiers and statements.
 
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>

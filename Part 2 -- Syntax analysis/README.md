@@ -6,4 +6,4 @@
 | Stmtseq           | = Stmt {';' Stmt } .                           |
 | Stmt              | = ['writeln' '(' String ')'] .                 |
 
-[Tutorial Part 1: Lexical analysis.](https://borismix.github.io/SimpleCompiler/02-Parser.html)
+[Tutorial Part 2: Syntax analysis.](https://borismix.github.io/SimpleCompiler/02-Parser.html)

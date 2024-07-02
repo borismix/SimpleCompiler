@@ -1,7 +1,7 @@
 # Part 3: More about grammars.
 
 | NonTerm           | Rule                                                       |
-| :---------------- | :---------------------------------------------------------:|
+| :---------------- | :----------------------------------------------------------|
 | Teeny             | = 'program' ident ';' CmpndStmt '.' .                      |
 | CmpndStmt         | = 'begin' [Stmt {';' Stmt }] 'end' .                       |
 | Stmt              | = Writeln .                                                |

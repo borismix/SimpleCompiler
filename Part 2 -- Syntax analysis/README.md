@@ -1,7 +1,7 @@
 # Grammar for teeny Pascal
 
 | NonTerm           | Rule                                           |
-| :---------------- | :--------------------------------------------: |
+| :---------------- | :--------------------------------------------- |
 | Pascal            | = 'program' id ';' 'begin' Stmtseq 'end' '.' . |
 | Stmtseq           | = Stmt {';' Stmt } .                           |
 | Stmt              | = ['writeln' '(' String ')'] .                 |

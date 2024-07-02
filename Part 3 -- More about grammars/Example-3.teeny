@@ -1,0 +1,5 @@
+program three;
+begin
+	writeln('hello, world!');
+	writeln('2 + 3 * 4 = ', 2 + 3 * 4);
+end.
